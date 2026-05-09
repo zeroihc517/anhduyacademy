@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Toán | Anh Duy Academy</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = "login.html";
+        }
+    </script>
+
+    <div id="main-content">
+        <div class="wrapper">
+<header>
+    <div class="header-left">
+        <h1>HỌC TOÁN</h1>
+        <p id="user-greeting" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;"></p>
+    </div>
+    <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
+        <button id="admin-btn" onclick="goToAdmin()" class="btn-practice hidden" style="background: #059669;">
+            Truy cập code
+        </button>
+        <button onclick="handleLogout()" class="btn-logout">Đăng xuất</button>
+    </div>
+</header>
+
+            <main class="container">
+                <div class="breadcrumb" id="breadcrumb">
+                    <span onclick="showSubjects()">Trang chủ</span>
+                </div>
+
+                <div id="subject-layer">
+    <h2 style="margin-bottom: 1.5rem;">Danh sách Học phần</h2>
+    <div class="grid" id="subject-list">
+        </div>
+</div>
+
+                <div id="chapter-layer" class="hidden">
+                    <h2 id="chapter-title" style="margin-bottom: 1.5rem;"></h2>
+                    <div class="grid" id="chapter-list"></div>
+                </div>
+
+                <div id="lesson-layer" class="hidden">
+                    <h2 id="lesson-title" style="margin-bottom: 1.5rem;"></h2>
+                    <div id="lesson-list"></div>
+                </div>
+
+            </main>
+        </div> 
+        
+        <footer>
+            &copy; Anh Duy Academy 2026
+        </footer>
+    </div>
+
+<script src="database.js"></script> <script src="script.js"></script>   </body>
+</html>
+</body>
+</html>
+</body>
+</html>
