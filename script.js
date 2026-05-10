@@ -53,12 +53,13 @@ function showSubjects() {
         // Sử dụng icon từ database hoặc icon mặc định nếu không có
         const iconSrc = item.icon || "https://cdn-icons-png.flaticon.com/512/3135/3135810.png";
 
-        card.innerHTML = `
-            <div class="card-icon">
-                <img src="${iconSrc}" alt="icon">
-            </div>
-            <h3>${item.subject}</h3>
-        `;
+// Tìm đoạn này trong hàm showSubjects()
+card.innerHTML = `
+    <div class="card-icon">
+        <img src="${iconSrc}" alt="icon">
+    </div>
+    <h3>${item.subject}</h3>
+    <p class="subject-desc">${item.description || ''}</p> `;
         subjectList.appendChild(card);
     });
 
@@ -69,10 +70,9 @@ function showChapters(subjectIndex) {
     const subject = ACADEMY_DATA[subjectIndex];
     
     document.getElementById('subject-layer').classList.add('hidden');
-    document.getElementById('lesson-layer').classList.add('hidden'); // Đảm bảo ẩn lớp bài học nếu quay lại từ bài học
+    document.getElementById('lesson-layer').classList.add('hidden');
     document.getElementById('chapter-layer').classList.remove('hidden');
 
-    // Breadcrumb mức môn học: Trang chủ / Tên môn
     document.getElementById('breadcrumb').innerHTML = `
         <span onclick="showSubjects()">Trang chủ</span> / 
         <span>${subject.subject}</span>
@@ -81,26 +81,44 @@ function showChapters(subjectIndex) {
     document.getElementById('chapter-title').innerText = subject.subject;
     
     const chapterList = document.getElementById('chapter-list');
-    chapterList.innerHTML = '';
+    chapterList.innerHTML = ''; 
+    
+    // Thay đổi cách render: Duyệt qua các Tập (Volumes)
+    if (subject.volumes) {
+        subject.volumes.forEach((volume, vIndex) => {
+            // 1. Tạo tiêu đề cho Tập
+            const volHeader = document.createElement('h3');
+            volHeader.innerText = volume.volTitle;
+            volHeader.style.gridColumn = "1 / -1"; // Trải dài hết hàng trong Grid
+            volHeader.style.margin = "1.5rem 0 1rem 0";
+            volHeader.style.color = "var(--primary-color)";
+            volHeader.style.borderLeft = "4px solid var(--primary-color)";
+            volHeader.style.paddingLeft = "10px";
+            
+            chapterList.appendChild(volHeader);
 
-    subject.chapters.forEach((chapter, cIndex) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.onclick = () => showLessons(subjectIndex, cIndex);
-        card.innerHTML = `<h3>${chapter.title}</h3><p>${chapter.desc || ''}</p>`;
-        chapterList.appendChild(card);
-    });
+            // 2. Tạo các card Chương thuộc tập đó
+            volume.chapters.forEach((chapter, cIndex) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Truyền thêm vIndex để hàm showLessons biết lấy từ tập nào
+                card.onclick = () => showLessons(subjectIndex, vIndex, cIndex);
+                card.innerHTML = `<h3>${chapter.title}</h3><p>${chapter.desc || ''}</p>`;
+                chapterList.appendChild(card);
+            });
+        });
+    }
 }
 
 // 3. Hiển thị danh sách Bài học (Đã cập nhật Breadcrumb đầy đủ)
-function showLessons(sIndex, cIndex) {
+function showLessons(sIndex, vIndex, cIndex) {
     const subject = ACADEMY_DATA[sIndex];
-    const chapter = subject.chapters[cIndex];
+    const volume = subject.volumes[vIndex];
+    const chapter = volume.chapters[cIndex];
     
     document.getElementById('chapter-layer').classList.add('hidden');
     document.getElementById('lesson-layer').classList.remove('hidden');
     
-    // Breadcrumb đầy đủ: Trang chủ / Tên môn / Tên chương
     document.getElementById('breadcrumb').innerHTML = `
         <span onclick="showSubjects()">Trang chủ</span> / 
         <span onclick="showChapters(${sIndex})">${subject.subject}</span> / 
@@ -112,19 +130,19 @@ function showLessons(sIndex, cIndex) {
     const lessonList = document.getElementById('lesson-list');
     lessonList.innerHTML = '';
 
-chapter.lessons.forEach(lesson => {
-    const item = document.createElement('div');
-    item.className = 'list-item';
-    item.innerHTML = `
-        <div class="lesson-content">
-            <span class="lesson-name">${lesson.name}</span>
-            <div class="lesson-actions">
-                <a href="${lesson.link1}" target="_blank" class="btn-practice">Luyện tập 1</a>
-                <a href="${lesson.link2}" target="_blank" class="btn-practice practice-alt">Luyện tập 2</a>
-            </div>
-        </div>`;
-    lessonList.appendChild(item);
-});
+    chapter.lessons.forEach(lesson => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+            <div class="lesson-content">
+                <span class="lesson-name">${lesson.name}</span>
+                <div class="lesson-actions">
+                    <a href="${lesson.link1}" target="_blank" class="btn-practice">Luyện tập 1</a>
+                    <a href="${lesson.link2}" target="_blank" class="btn-practice practice-alt">Luyện tập 2</a>
+                </div>
+            </div>`;
+        lessonList.appendChild(item);
+    });
 }
 
 /* === BẢO MẬT & LOGOUT === */

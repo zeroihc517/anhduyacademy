@@ -147,7 +147,14 @@ header h1 {
     z-index: 1;
 }
 
-.card p { display: none; } /* Ẩn mô tả để giống ảnh mẫu */
+/* Tìm đoạn này và xóa hoặc comment lại */
+/* Xóa hoặc sửa lại dòng này */
+.card p { 
+    display: block; /* Đổi từ none sang block */
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
 .hidden { display: none; }
 .breadcrumb { margin-bottom: 1.5rem; color: var(--text-light); cursor: pointer; }
 .list-item {
