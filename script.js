@@ -168,5 +168,5 @@ document.addEventListener('DOMContentLoaded', () => {
 // Hàm điều hướng khi bấm nút "Truy cập code"
 function goToAdmin() {
     // Bạn có thể đổi tên file này tùy ý
-    window.location.href = "admin_editor.html"; 
+    window.location.href = "https://github.com/zeroihc517/anhduyacademy"; 
 }
