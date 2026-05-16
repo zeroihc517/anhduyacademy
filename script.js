@@ -111,6 +111,7 @@ function showChapters(subjectIndex) {
 }
 
 // 3. Hiển thị danh sách Bài học (Đã cập nhật Breadcrumb đầy đủ)
+// 3. Hiển thị danh sách Bài học (Tự động nhận diện số lượng link tự luyện)
 function showLessons(sIndex, vIndex, cIndex) {
     const subject = ACADEMY_DATA[sIndex];
     const volume = subject.volumes[vIndex];
@@ -133,18 +134,31 @@ function showLessons(sIndex, vIndex, cIndex) {
     chapter.lessons.forEach(lesson => {
         const item = document.createElement('div');
         item.className = 'list-item';
+        
+        // --- ĐOẠN XỬ LÝ ĐỘNG SỐ NÚT LIÊN KẾT ---
+        let linksHTML = '';
+        if (lesson.link1) {
+            linksHTML += `<a href="${lesson.link1}" target="_blank" class="btn-practice">Luyện tập 1</a>`;
+        }
+        if (lesson.link2) {
+            linksHTML += `<a href="${lesson.link2}" target="_blank" class="btn-practice practice-alt">Luyện tập 2</a>`;
+        }
+        if (lesson.link3) {
+            // Bạn có thể giữ nguyên class style hoặc đổi màu tùy ý
+            linksHTML += `<a href="${lesson.link3}" target="_blank" class="btn-practice">Luyện tập 3</a>`;
+        }
+        // ----------------------------------------
+
         item.innerHTML = `
             <div class="lesson-content">
                 <span class="lesson-name">${lesson.name}</span>
                 <div class="lesson-actions">
-                    <a href="${lesson.link1}" target="_blank" class="btn-practice">Luyện tập 1</a>
-                    <a href="${lesson.link2}" target="_blank" class="btn-practice practice-alt">Luyện tập 2</a>
+                    ${linksHTML}
                 </div>
             </div>`;
         lessonList.appendChild(item);
     });
 }
-
 /* === BẢO MẬT & LOGOUT === */
 function handleLogout() {
     sessionStorage.removeItem('isLoggedIn');
