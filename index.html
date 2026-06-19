@@ -3,64 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Toán | Anh Duy Academy</title>
+    <title>Đăng nhập | Anh Duy Academy</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+    <div id="login-screen" class="login-page-bg">
+        <div class="login-card-v2">
+            <div class="login-header">
+                <div class="logo-icon">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+                <h2>Chào mừng trở lại</h2>
+                <p>Vui lòng đăng nhập để tiếp tục học tập</p>
+            </div>
+
+            <div class="login-form">
+                <div class="input-group">
+    <label for="username">Tên đăng nhập</label>
+    <div class="input-wrapper">
+        <i data-lucide="user"></i>
+        <input type="text" id="username" placeholder="VD: nguyenvan0104" autocomplete="off">
+    </div>
+    <span id="error-username" class="error-hint"></span> </div>
+
+<div class="input-group">
+    <label for="password">Mật khẩu</label>
+    <div class="input-wrapper">
+        <i data-lucide="lock"></i>
+        <input type="password" id="password" placeholder="••••••">
+    </div>
+    <span id="error-password" class="error-hint"></span> </div>
+
+                <button onclick="handleLogin()" class="btn-login-submit" id="loginBtn">
+                    <span>Đăng nhập ngay</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+
+                <p id="login-error" class="error-msg">
+                    <i data-lucide="alert-circle"></i>
+                    Tài khoản hoặc mật khẩu không chính xác!
+                </p>
+            </div>
+
+            <div class="login-footer">
+                <p>&copy; 2026 Anh Duy Academy</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = "login.html";
+        // Khởi tạo icon
+        lucide.createIcons();
+
+// Thay thế đoạn AUTH_CONFIG cũ bằng đoạn này
+const ACCOUNTS = [
+    { user: "admin", pass: "1234567", name: "Quản trị viên" },
+    { user: "baochi0501", pass: "#226244bc#TBC", name: "Bảo Chí" },
+    { user: "binhduy2105", pass: "binhduy123", name: "Bình Duy" }
+];
+
+function handleLogin() {
+    const uField = document.getElementById('username');
+    const pField = document.getElementById('password');
+    const uError = document.getElementById('error-username');
+    const pError = document.getElementById('error-password');
+    const btn = document.getElementById('loginBtn');
+    
+    // Reset trạng thái lỗi trước khi kiểm tra
+    [uField, pField].forEach(el => el.classList.remove('input-error-border'));
+    [uError, pError].forEach(el => { el.innerText = ''; el.style.display = 'none'; });
+
+    let hasError = false;
+
+    // Kiểm tra tên đăng nhập
+    if (!uField.value.trim()) {
+        uError.innerText = 'Vui lòng nhập tên đăng nhập';
+        uError.style.display = 'block';
+        uField.classList.add('input-error-border');
+        hasError = true;
+    }
+
+    // Kiểm tra mật khẩu
+    if (!pField.value.trim()) {
+        pError.innerText = 'Vui lòng nhập mật khẩu';
+        pError.style.display = 'block';
+        pField.classList.add('input-error-border');
+        hasError = true;
+    }
+
+    if (hasError) {
+        document.querySelector('.login-card-v2').classList.add('shake');
+        setTimeout(() => document.querySelector('.login-card-v2').classList.remove('shake'), 500);
+        return;
+    }
+
+    // Tiến hành đăng nhập nếu không có lỗi trống
+    btn.classList.add('loading');
+    btn.innerText = "Đang kiểm tra...";
+
+setTimeout(() => {
+        // TÌM KIẾM tài khoản khớp với dữ liệu nhập vào
+        const matchedAccount = ACCOUNTS.find(acc => 
+            acc.user === uField.value.trim() && 
+            acc.pass === pField.value.trim()
+        );
+
+        if (matchedAccount) {
+            sessionStorage.setItem('isLoggedIn', 'true');
+            // Lưu thêm tên để hiển thị lời chào nếu muốn
+            sessionStorage.setItem('userName', matchedAccount.name); 
+sessionStorage.setItem('currentUser', matchedAccount.user);
+            window.location.href = "index.html"; 
+        } else {
+            btn.classList.remove('loading');
+            btn.innerHTML = '<span>Đăng nhập ngay</span><i data-lucide="arrow-right"></i>';
+            lucide.createIcons();
+            
+            const globalError = document.getElementById('login-error');
+            globalError.innerHTML = '<i data-lucide="alert-circle"></i> Sai tài khoản hoặc mật khẩu!';
+            globalError.style.display = 'flex';
         }
+    }, 800);
+}
+        // Enter để đăng nhập
+        document.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') handleLogin();
+        });
+
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = "index.html";
+        }
+// Ngăn chặn chuột phải
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// Ngăn chặn các phím tắt phổ biến để mở DevTools
+document.addEventListener('keydown', (e) => {
+    // F12
+    if (e.key === 'F12') {
+        e.preventDefault();
+    }
+    // Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+U (View Source)
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+        e.preventDefault();
+    }
+    if (e.ctrlKey && e.key === 'u') {
+        e.preventDefault();
+    }
+});
     </script>
 
-    <div id="main-content">
-        <div class="wrapper">
-<header>
-    <div class="header-left">
-        <h1>HỌC TOÁN</h1>
-        <p id="user-greeting" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;"></p>
-    </div>
-    <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
-        <button id="admin-btn" onclick="goToAdmin()" class="btn-practice hidden" style="background: #059669;">
-            Truy cập code
-        </button>
-        <button onclick="handleLogout()" class="btn-logout">Đăng xuất</button>
-    </div>
-</header>
-
-            <main class="container">
-                <div class="breadcrumb" id="breadcrumb">
-                    <span onclick="showSubjects()">Trang chủ</span>
-                </div>
-
-                <div id="subject-layer">
-    <h2 style="margin-bottom: 1.5rem;">Danh sách Học phần</h2>
-    <div class="grid" id="subject-list">
-        </div>
-</div>
-
-                <div id="chapter-layer" class="hidden">
-                    <h2 id="chapter-title" style="margin-bottom: 1.5rem;"></h2>
-                    <div class="grid" id="chapter-list"></div>
-                </div>
-
-                <div id="lesson-layer" class="hidden">
-                    <h2 id="lesson-title" style="margin-bottom: 1.5rem;"></h2>
-                    <div id="lesson-list"></div>
-                </div>
-
-            </main>
-        </div> 
-        
-        <footer>
-            &copy; Anh Duy Academy 2026
-        </footer>
-    </div>
-
-<script src="database.js"></script> <script src="script.js"></script>   </body>
-</html>
-</body>
-</html>
 </body>
 </html>
