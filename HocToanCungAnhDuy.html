@@ -267,7 +267,7 @@
                 <hr class="my-4" style="border-color: var(--border-color);">
                 
                 <button class="btn-qa-menu" id="btnNavQA" onclick="openQASection()">
-                    <i class="fa-regular fa-comments fa-lg"></i> Giải đáp thắc mắc
+                    <i class="fa-regular fa-comments fa-lg"></i> Hỗ trợ
                 </button>
                 <button class="btn mt-3 w-100 text-start" id="btnAdminLoginToggle" onclick="openAdminModal()" style="color: var(--text-muted); font-size: 14px; font-weight: 500;">
                     <i class="fa-solid fa-lock"></i> Dành cho Ban quản trị
@@ -306,7 +306,7 @@
                 <div class="data-card" id="mainDataCard">
                     <div id="loadingStatus" class="pulse-loader">
                         <div class="spinner-modern"></div>
-                        <span class="text-muted fw-bold" style="font-size: 16px;">Đang tải dữ liệu học phần...</span>
+                        <span class="text-muted fw-bold" style="font-size: 16px;">Đang tải dữ liệu...</span>
                     </div>
 
                     <div id="tableWrapper" class="table-responsive d-none border-0">
@@ -573,7 +573,7 @@
             let mssvValue = $('#txtMSSV').val().trim();
             let qText = $('#txtQuestion').val().trim();
             
-            if (!mssvValue) { alert("Vui lòng nhập Mã số sinh viên!"); $('#txtMSSV').focus(); return; }
+            if (!mssvValue) { alert("Vui lòng nhập thông tin liên hệ!"); $('#txtMSSV').focus(); return; }
             if (!qText) { alert("Vui lòng nhập nội dung câu hỏi!"); $('#txtQuestion').focus(); return; }
 
             let btn = $('#btnSubmitQ');
@@ -607,7 +607,7 @@
                 if (i % 2 === 0) {
                     html += `<div class="msg-admin"><i class="fa-solid fa-user-shield me-2"></i><strong>Admin:</strong><br>${content}</div>`;
                 } else {
-                    html += `<div class="msg-sv"><i class="fa-solid fa-user-graduate me-2"></i><strong>Sinh viên phản hồi:</strong><br>${content}</div>`;
+                    html += `<div class="msg-sv"><i class="fa-solid fa-user-graduate me-2"></i><strong>Người dùng phản hồi:</strong><br>${content}</div>`;
                 }
             }
             return html;
