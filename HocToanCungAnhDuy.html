@@ -85,38 +85,20 @@
             margin-bottom: 12px; display: block;
         }
 
-        .course-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .course-list { display: flex; flex-direction: column; gap: 8px; }
         
         .btn-course {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            border-radius: 6px;
-            text-align: left;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px 16px;
+            border-radius: 6px; text-align: left; font-size: 15px; font-weight: 600;
+            color: var(--text-main); cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 10px;
         }
         
-        .btn-course:hover {
-            background: var(--bg-global);
-            border-color: #9ca3af;
-        }
+        .btn-course:hover { background: var(--bg-global); border-color: #9ca3af; }
         
         .btn-course.active {
-            background: var(--primary-light);
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 1px var(--primary-color);
+            background: var(--primary-light); color: var(--primary-color);
+            border-color: var(--primary-color); box-shadow: 0 0 0 1px var(--primary-color);
         }
 
         .btn-qa-menu {
@@ -164,6 +146,11 @@
         .custom-portal-table th { background: var(--primary-color); color: #ffffff; font-weight: 600; font-size: 16px; text-transform: uppercase; padding: 18px 24px; border-right: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 10; }
         .custom-portal-table td { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; font-size: 16px; font-weight: 500; vertical-align: middle; color: var(--text-main); white-space: pre-wrap; word-break: break-word; }
 
+        /* Hiệu ứng Toggle / Accordion */
+        .toggle-icon { transition: transform 0.3s ease; display: inline-block; font-size: 14px; }
+        .group-header.expanded .toggle-icon { transform: rotate(90deg); }
+        .group-header:hover td { opacity: 0.85; }
+        
         .grid-row:hover td { background-color: var(--bg-global); }
         .grid-row.row-topic td { background-color: var(--topic-bg); color: #1e40af; font-weight: 600; border-bottom-color: var(--topic-border); }
         .grid-row.row-lesson td { background-color: var(--lesson-bg); color: #166534; font-weight: 600; border-bottom-color: var(--lesson-border); }
@@ -188,32 +175,9 @@
         .qa-answer { background: var(--lesson-bg); border-left: 4px solid #166534; padding: 14px 18px; border-radius: 6px; color: #166534; font-size: 15px; font-weight: 500; margin-top: 10px; white-space: pre-wrap; word-break: break-word; }
         .qa-no-answer { background: #f3f4f6; border-left: 4px solid #9ca3af; padding: 10px 14px; border-radius: 6px; color: #4b5563; font-size: 14px; font-style: italic; margin-top: 10px; }
 
-        .link-card {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 20px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-main);
-            transition: all 0.2s ease;
-            box-shadow: var(--shadow-sm);
-        }
-        .link-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-color);
-        }
-        .link-card .icon-box {
-            width: 50px; height: 50px;
-            background: var(--primary-light);
-            color: var(--primary-color);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px;
-        }
+        .link-card { display: flex; align-items: center; gap: 16px; padding: 20px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; text-decoration: none; color: var(--text-main); transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
+        .link-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
+        .link-card .icon-box { width: 50px; height: 50px; background: var(--primary-light); color: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .link-card h5 { margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--primary-color); }
         .link-card p { margin: 0; font-size: 14px; color: var(--text-muted); }
 
@@ -227,7 +191,6 @@
             .page-title { font-size: 20px; }
             .custom-portal-table th, .custom-portal-table td { padding: 16px; font-size: 15px; }
         }
-        
     </style>
 </head>
 <body>
@@ -372,13 +335,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script>
-        // ==========================================
-        // CẤU HÌNH API URL
-        // ==========================================
-        // DÁN URL WEB APP CỦA GOOGLE APPS SCRIPT VÀO ĐÂY
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxP9oRQjhN9lT3eMxgSHM6QBw_C9M2ytWo8WbmKcFPDOgOTPC_flqg5dT0cjZtpJKjQow/exec'; 
 
-        // Hàm hỗ trợ gửi dữ liệu POST an toàn (tránh lỗi CORS)
         function postToGAS(payload, onSuccess, onError) {
             $.ajax({
                 url: SCRIPT_URL,
@@ -390,7 +348,6 @@
             });
         }
 
-        // Xử lý Mobile Sidebar
         const sidebar = document.getElementById('sidebarMenu');
         const overlay = document.getElementById('sidebarOverlay');
         const btnToggle = document.getElementById('btnToggleMenu');
@@ -403,13 +360,11 @@
         btnToggle.addEventListener('click', toggleMenu);
         overlay.addEventListener('click', toggleMenu);
 
-        // Reset trạng thái các nút menu bên Sidebar
         function resetNavActive() {
             $('.btn-course').removeClass('active');
             $('#btnNavQA').removeClass('active');
         }
 
-        // CHUYỂN TRANG: TỔNG HỢP LINK
         function loadTongHopView() {
             resetNavActive();
             $('#btnNavTongHop').addClass('active');
@@ -428,7 +383,6 @@
             loadTongHopView();
             loadWebLinks();
             
-            // Load danh sách học phần thành các button qua API GET
             $.ajax({
                 url: SCRIPT_URL + "?action=getHocPhanList",
                 method: "GET",
@@ -446,9 +400,29 @@
                     $('#dynamicCourseList').html('<span class="text-danger small px-2">Lỗi tải danh sách môn học.</span>');
                 }
             });
+
+            // Gắn sự kiện Expand/Collapse (Accordion)
+            $(document).on('click', '.group-header', function() {
+                let targetClass = $(this).data('target');
+                let isExpanded = $(this).hasClass('expanded');
+
+                if (isExpanded) {
+                    $(this).removeClass('expanded');
+                    $(targetClass).hide();
+                    // Khi thu gọn Chương/Bài, thu gọn luôn các nút con đang mở
+                    $(targetClass).filter('.group-header').removeClass('expanded').each(function() {
+                        let childTarget = $(this).data('target');
+                        if(childTarget) {
+                            $(childTarget).hide();
+                        }
+                    });
+                } else {
+                    $(this).addClass('expanded');
+                    $(targetClass).fadeIn(150); 
+                }
+            });
         });
 
-        // KHỐI XỬ LÝ GIAO DIỆN CHÍNH (HỌC PHẦN)
         function checkAndExtractUrl(text) {
             let urlRegex = /(https?:\/\/[^\s]+)/g;
             let match = text.match(urlRegex);
@@ -487,6 +461,9 @@
                     }
 
                     let bodyHtml = ''; let headHtml = ''; let instructorInfos = [];
+                    // Biến lưu trữ ID nhóm (Chương / Bài) để làm Accordion
+                    let currentChapId = ''; 
+                    let currentLessonId = '';
 
                     data.forEach((row, rowIndex) => {
                         let fullRowText = row.join(" ").toLowerCase().replace(/\s+/g, '');
@@ -508,15 +485,44 @@
                         }
 
                         let isNewRow = /^new$/i.test(firstCellTextRaw) || firstCellTextRaw.toLowerCase().includes('new');
-                        let rowClass = 'grid-row'; let iconPrefix = '';
+                        let isTopic = /chủđề|chương/.test(firstCellText);
+                        let isLesson = /bài/.test(firstCellText);
+                        let isExam = /bàithi|kiểmtra|thi/.test(fullRowText);
+                        let isBank = /ngânhàng/.test(fullRowText);
 
-                        if (isNewRow) { rowClass += ' row-new'; }
-                        else if (/ngânhàng/.test(fullRowText)) { rowClass += ' row-white'; iconPrefix = '<i class="fa-solid fa-box-archive me-2 text-secondary"></i>'; }
-                        else if (/bàithi|kiểmtra|thi/.test(fullRowText)) { rowClass += ' row-exam'; iconPrefix = '<i class="fa-solid fa-triangle-exclamation me-2 text-danger"></i>'; }
-                        else if (/chủđề|chương/.test(firstCellText)) { rowClass += ' row-topic'; }
-                        else if (/bài/.test(firstCellText)) { rowClass += ' row-lesson'; iconPrefix = '<i class="fa-solid fa-folder-open me-2 text-success"></i>'; }
+                        let rowClass = 'grid-row'; 
+                        let iconPrefix = '';
+                        let rowAttributes = '';
 
-                        bodyHtml += `<tr class="${rowClass}">`;
+                        // Xác định phân cấp dòng: Chương -> Bài -> Nội dung
+                        if (isTopic) {
+                            currentChapId = 'chap_' + rowIndex;
+                            currentLessonId = ''; // Reset bài mới khi qua chương khác
+                            rowClass += ' row-topic group-header';
+                            rowAttributes = `data-target=".child-of-${currentChapId}" style="cursor: pointer;"`;
+                            iconPrefix = '<i class="fa-solid fa-chevron-right toggle-icon me-2"></i>';
+                        } else if (isLesson) {
+                            currentLessonId = 'les_' + rowIndex;
+                            let chapClass = currentChapId ? ` child-of-${currentChapId}` : '';
+                            rowClass += ` row-lesson group-header${chapClass}`;
+                            rowAttributes = `data-target=".child-of-${currentLessonId}" style="cursor: pointer; ${currentChapId ? 'display: none;' : ''}"`;
+                            iconPrefix = `<span style="padding-left: 20px;"></span><i class="fa-solid fa-chevron-right toggle-icon me-2"></i><i class="fa-solid fa-folder-open me-2 text-success"></i>`;
+                        } else {
+                            let parentClass = currentLessonId ? `child-of-${currentLessonId}` : (currentChapId ? `child-of-${currentChapId}` : '');
+                            if (parentClass) rowClass += ` ${parentClass}`;
+                            rowAttributes = parentClass ? `style="display: none;"` : '';
+
+                            let indent = '';
+                            if (currentLessonId) indent = '<span style="padding-left: 45px;"></span>';
+                            else if (currentChapId) indent = '<span style="padding-left: 20px;"></span>';
+                            
+                            if (isNewRow) { rowClass += ' row-new'; iconPrefix = indent; }
+                            else if (isBank) { rowClass += ' row-white'; iconPrefix = indent + '<i class="fa-solid fa-box-archive me-2 text-secondary"></i>'; }
+                            else if (isExam) { rowClass += ' row-exam'; iconPrefix = indent + '<i class="fa-solid fa-triangle-exclamation me-2 text-danger"></i>'; }
+                            else { rowClass += ' row-white'; iconPrefix = indent; }
+                        }
+
+                        bodyHtml += `<tr class="${rowClass}" ${rowAttributes}>`;
                         row.forEach((cell, cellIndex) => {
                             if (cellIndex > 3) return; 
                             let cellText = String(cell).trim();
@@ -528,7 +534,7 @@
                                 bodyHtml += `<td><a href="${extractedUrl}" target="_blank" class="btn-portal-action"><i class="fa-solid fa-cloud-arrow-down"></i> ${label}</a></td>`;
                             } else {
                                 if (cellText === "") bodyHtml += `<td></td>`;
-                                else bodyHtml += `<td>${cellIndex === 0 && !isNewRow ? iconPrefix + cellText : cellText}</td>`;
+                                else bodyHtml += `<td>${cellIndex === 0 ? iconPrefix + cellText : cellText}</td>`;
                             }
                         });
                         bodyHtml += '</tr>';
@@ -552,7 +558,6 @@
             });
         }
 
-        // KHỐI XỬ LÝ Q&A (GIẢI ĐÁP THẮC MẮC)
         function openQASection() {
             resetNavActive();
             $('#btnNavQA').addClass('active');
@@ -691,7 +696,6 @@
             });
         }
 
-        // Tải danh sách liên kết WEB
         function loadWebLinks() {
             $('#webLinksContainer').html('<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin fs-3 mb-2"></i><br>Đang tải danh sách liên kết...</div>');
             
@@ -739,7 +743,6 @@
             let payload = { action: "submitVote", rowIndex: rowIndex, type: type };
 
             postToGAS(payload, function(newData) {
-                // Parsing newData in case it's returned as string depending on your GAS setup
                 let data = typeof newData === 'string' ? JSON.parse(newData) : newData;
                 $(`#voteArea-${rowIndex} .up`).html(`<i class="fa-solid fa-thumbs-up"></i> Hữu ích (${data.up})`);
                 $(`#voteArea-${rowIndex} .down`).html(`<i class="fa-solid fa-thumbs-down"></i> Chưa rõ (${data.down})`);
@@ -768,7 +771,6 @@
             });
         }
 
-        // Biến trạng thái đăng nhập
         let isAdmin = false;
 
         function openAdminModal() {
@@ -819,11 +821,7 @@
             });
         }
 
-        // TÍNH NĂNG CHỐNG XEM MÃ NGUỒN
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F12' || e.keyCode === 123) { e.preventDefault(); return false; }
             if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) { e.preventDefault(); return false; }
