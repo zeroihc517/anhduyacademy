@@ -132,6 +132,10 @@
         .custom-portal-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; font-size: 15px; font-weight: 500; vertical-align: middle; color: #334155; white-space: pre-wrap; word-break: break-word; }
         .grid-row { transition: background-color 0.2s ease; }
         .grid-row:hover td { background-color: #f8fafc; }
+        
+        /* CSS cho thẻ "Phần" */
+        .grid-row.row-part td { background-color: #fce7f3; color: #be185d; font-weight: 700; text-transform: uppercase; }
+        
         .grid-row.row-topic td { background-color: #f0f7ff; color: #1d4ed8; font-weight: 600; }
         .grid-row.row-lesson td { background-color: #f0fdf4; color: #15803d; font-weight: 600; }
         .grid-row.row-exam td { background-color: #fff1f2; color: #be123c; font-weight: 600; }
@@ -168,10 +172,10 @@
             .main-content { margin-left: 0; padding: 80px 15px 24px 15px; }
             .sidebar-overlay.show { display: block; opacity: 1; }
         }
-/* Hiệu ứng Toggle / Accordion */
-.toggle-icon { transition: transform 0.3s ease; display: inline-block; font-size: 14px; }
-.group-header.expanded .toggle-icon { transform: rotate(90deg); }
-.group-header:hover td { opacity: 0.85; }
+        /* Hiệu ứng Toggle / Accordion */
+        .toggle-icon { transition: transform 0.3s ease; display: inline-block; font-size: 14px; }
+        .group-header.expanded .toggle-icon { transform: rotate(90deg); }
+        .group-header:hover td { opacity: 0.85; }
     </style>
 </head>
 <body>
@@ -463,6 +467,10 @@ data.forEach((row, rowIndex) => {
     }
 
     let isNewRow = /^new$/i.test(firstCellTextRaw) || firstCellTextRaw.toLowerCase().includes('new');
+    
+    // Thêm logic nhận diện thẻ Phần
+    let isPart = /phần/.test(firstCellText);
+    
     let isTopic = /chủđề|chương/.test(firstCellText);
     let isLesson = /bài/.test(firstCellText);
     let isExam = /bàithi|kiểmtra|thi/.test(fullRowText);
@@ -472,8 +480,14 @@ data.forEach((row, rowIndex) => {
     let iconPrefix = '';
     let rowAttributes = '';
 
-    // Xác định phân cấp dòng: Chương -> Bài -> Nội dung
-    if (isTopic) {
+    // Xác định phân cấp dòng: Phần -> Chương -> Bài -> Nội dung
+    if (isPart) {
+        currentChapId = ''; // Đặt lại ID Chương để không bị ẩn theo cấp
+        currentLessonId = ''; // Đặt lại ID Bài học
+        rowClass += ' row-part'; // Thêm class màu hồng
+        rowAttributes = ''; // Không có class group-header để không bấm thả xuống
+        iconPrefix = '<i class="fa-solid fa-layer-group me-2" style="color: #be185d;"></i>';
+    } else if (isTopic) {
         currentChapId = 'chap_' + rowIndex;
         currentLessonId = ''; // Reset bài mới khi qua chương khác
         rowClass += ' row-topic group-header';
