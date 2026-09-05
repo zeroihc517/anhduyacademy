@@ -383,28 +383,60 @@
             }
         }
 
+// 1. Khai báo danh mục và bộ nhớ đệm (Cache) toàn cục
+        const danhMucThuCong = [
+            "Toán 10 Tự học Tập 1", "Toán 10 Tự học Tập 2", "Toán 10 Nâng cao",
+            "Toán 11 Tự học Tập 1", "Toán 11 Tự học Tập 2", "Toán 11 Nền tảng",
+            "Toán 11 Nâng cao", "Toán 12 Nền tảng", "Toán 12 Sổ tay",
+            "Toán 12 Tổng ôn Tập 1", "Toán 12 Tổng ôn Tập 2", "Toán 12 Nâng cao",
+            "Toán 12 Tổ hợp Xác suất", "Toán 12 THPTQG2026",
+        ];
+        
+        let courseDataCache = {}; // Nơi lưu trữ dữ liệu tải sẵn
+
         $(document).ready(function() {
             loadTongHopView();
             loadWebLinks();
             
-            $.ajax({
-                url: SCRIPT_URL + "?action=getHocPhanList",
-                method: "GET",
-                dataType: "json",
-                success: function(list) {
-                    let optionsHtml = '';
-                    list.forEach((name) => {
-                        optionsHtml += `<button class="btn-course nav-hocphan" onclick="loadDataByHocPhan('${name}', this)">
-                                            <i class="fa-solid fa-folder-closed"></i> ${name}
-                                        </button>`;
-                    });
-                    $('#dynamicCourseList').html(optionsHtml);
-                },
-                error: function(err) {
-                    $('#dynamicCourseList').html('<span class="text-danger small px-2">Lỗi tải danh sách.</span>');
-                }
+            // Tạo menu động
+            let optionsHtml = '';
+            danhMucThuCong.forEach((name) => {
+                optionsHtml += `<button class="btn-course nav-hocphan" onclick="loadDataByHocPhan('${name}', this)">
+                                    <i class="fa-solid fa-folder-closed"></i> ${name}
+                                </button>`;
             });
+            $('#dynamicCourseList').html(optionsHtml);
+
+            // Bắt đầu tải ngầm dữ liệu tuần tự để không làm quá tải Google Script
+            preloadCoursesBackground();
         });
+
+        // Hàm tải ngầm dữ liệu
+        function preloadCoursesBackground() {
+            let queue = [...danhMucThuCong];
+            
+            function fetchNext() {
+                if (queue.length === 0) return; // Đã tải xong toàn bộ
+                
+                let sheetName = queue.shift();
+                $.ajax({
+                    url: SCRIPT_URL + "?action=getHocPhanData&sheetName=" + encodeURIComponent(sheetName),
+                    method: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        courseDataCache[sheetName] = data; // Lưu vào cache
+                        fetchNext(); // Tải tiếp môn học tiếp theo
+                    },
+                    error: function() {
+                        fetchNext(); // Nếu lỗi môn này, bỏ qua tải môn tiếp theo
+                    }
+                });
+            }
+            
+            fetchNext(); // Kích hoạt chạy ngầm
+        }
+
+      
 
         // Gắn sự kiện Expand/Collapse (Accordion)
         $(document).on('click', '.group-header', function() {
@@ -433,7 +465,9 @@
             return match ? match[0] : null;
         }
 
-        function loadDataByHocPhan(sheetName, element) {
+       
+
+function loadDataByHocPhan(sheetName, element) {
             if(!sheetName) return;
             
             resetNavActive();
@@ -445,150 +479,146 @@
             
             $('#tableWrapper').addClass('d-none');
             $('#instructorArea').addClass('d-none').html('');
-            $('#loadingStatus').removeClass('d-none');
 
             if(window.innerWidth < 992) {
                 sidebar.classList.remove('show');
                 overlay.classList.remove('show');
             }
 
-            $.ajax({
-                url: SCRIPT_URL + "?action=getHocPhanData&sheetName=" + encodeURIComponent(sheetName),
-                method: "GET",
-                dataType: "json",
-                success: function(data) {
-                    if (!data || data.length === 0) {
-                        $('#sheetTableBody').html('<tr><td colspan="3" class="text-center py-5 text-muted"><i class="fa-regular fa-folder-open fs-1 mb-3 d-block"></i>Chưa có dữ liệu.</td></tr>');
+            // KIỂM TRA BỘ NHỚ ĐỆM (CACHE)
+            if (courseDataCache[sheetName]) {
+                // Nếu đã tải ngầm xong -> Hiển thị NGAY LẬP TỨC
+                $('#loadingStatus').addClass('d-none');
+                renderCourseData(courseDataCache[sheetName]);
+            } else {
+                // Nếu người dùng bấm quá nhanh lúc chưa tải ngầm xong -> Mới gọi AJAX
+                $('#loadingStatus').removeClass('d-none');
+                $.ajax({
+                    url: SCRIPT_URL + "?action=getHocPhanData&sheetName=" + encodeURIComponent(sheetName),
+                    method: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        courseDataCache[sheetName] = data; // Lưu lại vào cache
                         $('#loadingStatus').addClass('d-none');
-                        $('#tableWrapper').removeClass('d-none');
-                        return;
+                        renderCourseData(data);
+                    },
+                    error: function() {
+                        $('#loadingStatus').html('<span class="text-danger fw-bold">Có lỗi xảy ra khi tải dữ liệu!</span>');
                     }
-
-                    let bodyHtml = ''; let headHtml = ''; let instructorInfos = [];
-                    let currentChapId = ''; 
-                    let currentLessonId = '';
-
-                    data.forEach((row, rowIndex) => {
-                        let fullRowText = row.join(" ").toLowerCase().replace(/\s+/g, '');
-                        let firstCellTextRaw = String(row[0]).trim();
-                        let firstCellText = firstCellTextRaw.toLowerCase().replace(/\s+/g, '');
-
-                        // Header: Ẩn Cột 3 (Hình thức), Giữ Cột 1 (STT), Cột 2 (Nội dung), Cột 4 (Tài liệu)
-                        if (rowIndex === 0) {
-                            headHtml += `<th style="width: 15%;">${String(row[0] || 'STT')}</th>`;
-                            headHtml += `<th style="width: 60%;">${String(row[1] || 'Nội dung')}</th>`;
-                            headHtml += `<th style="width: 25%;">${String(row[4] || row[3] || 'Tài liệu')}</th>`;
-                            return;
-                        }
-
-                        if (/mãhp|họcphần|gv\d|giảngviên|email|facebook|sốtínchỉ/.test(fullRowText)) {
-                            let info = row.filter(cell => String(cell).trim() !== "").join(" <span class='mx-2 text-black-50'>|</span> ");
-                            if(info) instructorInfos.push(info);
-                            return;
-                        }
-
-                        let isNewRow = /^new$/i.test(firstCellTextRaw) || firstCellTextRaw.toLowerCase().includes('new');
-                        
-                        // Thêm logic nhận diện thẻ Phần
-                        let isPart = /phần/.test(firstCellText);
-                        
-                        let isTopic = /chủđề|chương/.test(firstCellText);
-                        let isLesson = /bài/.test(firstCellText);
-                        let isExam = /bàithi|kiểmtra|thi/.test(fullRowText);
-                        let isBank = /ngânhàng/.test(fullRowText);
-
-                        let rowClass = 'grid-row'; 
-                        let iconPrefix = '';
-                        let rowAttributes = '';
-
-                        // Xác định phân cấp dòng: Phần -> Chương -> Bài -> Nội dung
-                        if (isPart) {
-                            currentChapId = ''; 
-                            currentLessonId = ''; 
-                            rowClass += ' row-part'; 
-                            rowAttributes = ''; 
-                            iconPrefix = '<i class="fa-solid fa-layer-group me-2" style="color: #be185d;"></i>';
-                        } else if (isTopic) {
-                            currentChapId = 'chap_' + rowIndex;
-                            currentLessonId = ''; 
-                            rowClass += ' row-topic group-header';
-                            rowAttributes = `data-target=".child-of-${currentChapId}" style="cursor: pointer;"`;
-                            iconPrefix = '<i class="fa-solid fa-chevron-right toggle-icon me-2"></i>';
-                        } else if (isLesson) {
-                            currentLessonId = 'les_' + rowIndex;
-                            let chapClass = currentChapId ? ` child-of-${currentChapId}` : '';
-                            rowClass += ` row-lesson group-header${chapClass}`;
-                            rowAttributes = `data-target=".child-of-${currentLessonId}" style="cursor: pointer; ${currentChapId ? 'display: none;' : ''}"`;
-                            iconPrefix = `<span style="padding-left: 20px;"></span><i class="fa-solid fa-chevron-right toggle-icon me-2"></i><i class="fa-solid fa-folder-open me-2 text-success"></i>`;
-                        } else {
-                            let parentClass = currentLessonId ? `child-of-${currentLessonId}` : (currentChapId ? `child-of-${currentChapId}` : '');
-                            if (parentClass) rowClass += ` ${parentClass}`;
-                            rowAttributes = parentClass ? `style="display: none;"` : '';
-
-                            let indent = '';
-                            if (currentLessonId) indent = '<span style="padding-left: 45px;"></span>';
-                            else if (currentChapId) indent = '<span style="padding-left: 20px;"></span>';
-                            
-                            if (isNewRow) { rowClass += ' row-new'; iconPrefix = indent; }
-                            else if (isBank) { rowClass += ' row-white'; iconPrefix = indent + '<i class="fa-solid fa-box-archive me-2 text-secondary"></i>'; }
-                            else if (isExam) { rowClass += ' row-white'; iconPrefix = indent; }
-                            else { rowClass += ' row-white'; iconPrefix = indent; }
-                        }
-
-                        // Trích xuất URL từ dòng
-                        let rowUrl = null;
-                        row.forEach((cell) => {
-                            if (!rowUrl) {
-                                rowUrl = checkAndExtractUrl(String(cell).trim());
-                            }
-                        });
-
-                        bodyHtml += `<tr class="${rowClass}" ${rowAttributes}>`;
-                        
-                        // Cột 1 (Index 0): STT
-                        let cell0 = String(row[0] || '').trim();
-                        if (isNewRow) cell0 = cell0.replace(/new/i, '<span class="badge-new">Mới</span>');
-                        bodyHtml += `<td>${cell0 === "" ? "" : iconPrefix + cell0}</td>`;
-
-                        // Cột 2 (Index 1): Nội dung / Tên bài học (Mở ngay trong trang hiện tại)
-                        let cell1 = String(row[1] || '').trim();
-                        if (rowUrl) {
-                            bodyHtml += `<td><a href="${rowUrl}" class="lesson-title-link">${cell1} <i class="fa-solid fa-arrow-right ms-1" style="font-size: 11px;"></i></a></td>`;
-                        } else {
-                            bodyHtml += `<td>${cell1}</td>`;
-                        }
-
-                        // Cột 4 (Index 3/4): Tài liệu (Ẩn cột 3 'Hình thức', Mở ngay trong trang hiện tại)
-                        let cell3 = String(row[3] || row[4] || '').trim();
-                        let extractedUrl = checkAndExtractUrl(cell3);
-                        if (extractedUrl) {
-                            let label = cell3.replace(extractedUrl, '').trim() || "Truy cập";
-                            bodyHtml += `<td><a href="${extractedUrl}" class="btn-portal-action"><i class="fa-solid fa-cloud-arrow-down"></i> ${label}</a></td>`;
-                        } else {
-                            bodyHtml += `<td>${cell3}</td>`;
-                        }
-
-                        bodyHtml += '</tr>';
-                    });
-
-                    if (instructorInfos.length > 0) {
-                        let cardContent = `<div class="instructor-card"><h6 class="mb-4"><i class="fa-solid fa-chalkboard-user me-2"></i>Thông tin lớp học & Giảng viên phụ trách</h6><div class="row">`;
-                        instructorInfos.forEach(info => { cardContent += `<div class="col-12 col-md-6 instructor-item"><i class="fa-solid fa-check text-primary"></i> <span>${info}</span></div>`; });
-                        cardContent += `</div></div>`;
-                        $('#instructorArea').html(cardContent).removeClass('d-none');
-                    }
-
-                    $('#sheetTableHead').html(headHtml);
-                    $('#sheetTableBody').html(bodyHtml);
-                    $('#loadingStatus').addClass('d-none');
-                    $('#tableWrapper').removeClass('d-none');
-                },
-                error: function() {
-                    $('#loadingStatus').html('<span class="text-danger fw-bold">Có lỗi xảy ra khi tải dữ liệu!</span>');
-                }
-            });
+                });
+            }
         }
 
+        // Hàm tách biệt đảm nhiệm việc vẽ bảng giao diện
+        function renderCourseData(data) {
+            if (!data || data.length === 0) {
+                $('#sheetTableBody').html('<tr><td colspan="3" class="text-center py-5 text-muted"><i class="fa-regular fa-folder-open fs-1 mb-3 d-block"></i>Chưa có dữ liệu.</td></tr>');
+                $('#tableWrapper').removeClass('d-none');
+                return;
+            }
+
+            let bodyHtml = ''; let headHtml = ''; let instructorInfos = [];
+            let currentChapId = ''; 
+            let currentLessonId = '';
+
+            data.forEach((row, rowIndex) => {
+                let fullRowText = row.join(" ").toLowerCase().replace(/\s+/g, '');
+                let firstCellTextRaw = String(row[0]).trim();
+                let firstCellText = firstCellTextRaw.toLowerCase().replace(/\s+/g, '');
+
+                if (rowIndex === 0) {
+                    headHtml += `<th style="width: 15%;">${String(row[0] || 'STT')}</th>`;
+                    headHtml += `<th style="width: 60%;">${String(row[1] || 'Nội dung')}</th>`;
+                    headHtml += `<th style="width: 25%;">${String(row[4] || row[3] || 'Tài liệu')}</th>`;
+                    return;
+                }
+
+                if (/mãhp|họcphần|gv\d|giảngviên|email|facebook|sốtínchỉ/.test(fullRowText)) {
+                    let info = row.filter(cell => String(cell).trim() !== "").join(" <span class='mx-2 text-black-50'>|</span> ");
+                    if(info) instructorInfos.push(info);
+                    return;
+                }
+
+                let isNewRow = /^new$/i.test(firstCellTextRaw) || firstCellTextRaw.toLowerCase().includes('new');
+                let isPart = /phần/.test(firstCellText);
+                let isTopic = /chủđề|chương/.test(firstCellText);
+                let isLesson = /bài/.test(firstCellText);
+                let isExam = /bàithi|kiểmtra|thi/.test(fullRowText);
+                let isBank = /ngânhàng/.test(fullRowText);
+
+                let rowClass = 'grid-row'; 
+                let iconPrefix = '';
+                let rowAttributes = '';
+
+                if (isPart) {
+                    currentChapId = ''; currentLessonId = ''; rowClass += ' row-part'; rowAttributes = ''; 
+                    iconPrefix = '<i class="fa-solid fa-layer-group me-2" style="color: #be185d;"></i>';
+                } else if (isTopic) {
+                    currentChapId = 'chap_' + rowIndex; currentLessonId = ''; rowClass += ' row-topic group-header';
+                    rowAttributes = `data-target=".child-of-${currentChapId}" style="cursor: pointer;"`;
+                    iconPrefix = '<i class="fa-solid fa-chevron-right toggle-icon me-2"></i>';
+                } else if (isLesson) {
+                    currentLessonId = 'les_' + rowIndex;
+                    let chapClass = currentChapId ? ` child-of-${currentChapId}` : '';
+                    rowClass += ` row-lesson group-header${chapClass}`;
+                    rowAttributes = `data-target=".child-of-${currentLessonId}" style="cursor: pointer; ${currentChapId ? 'display: none;' : ''}"`;
+                    iconPrefix = `<span style="padding-left: 20px;"></span><i class="fa-solid fa-chevron-right toggle-icon me-2"></i><i class="fa-solid fa-folder-open me-2 text-success"></i>`;
+                } else {
+                    let parentClass = currentLessonId ? `child-of-${currentLessonId}` : (currentChapId ? `child-of-${currentChapId}` : '');
+                    if (parentClass) rowClass += ` ${parentClass}`;
+                    rowAttributes = parentClass ? `style="display: none;"` : '';
+
+                    let indent = '';
+                    if (currentLessonId) indent = '<span style="padding-left: 45px;"></span>';
+                    else if (currentChapId) indent = '<span style="padding-left: 20px;"></span>';
+                    
+                    if (isNewRow) { rowClass += ' row-new'; iconPrefix = indent; }
+                    else if (isBank) { rowClass += ' row-white'; iconPrefix = indent + '<i class="fa-solid fa-box-archive me-2 text-secondary"></i>'; }
+                    else if (isExam) { rowClass += ' row-white'; iconPrefix = indent; }
+                    else { rowClass += ' row-white'; iconPrefix = indent; }
+                }
+
+                let rowUrl = null;
+                row.forEach((cell) => {
+                    if (!rowUrl) { rowUrl = checkAndExtractUrl(String(cell).trim()); }
+                });
+
+                bodyHtml += `<tr class="${rowClass}" ${rowAttributes}>`;
+                
+                let cell0 = String(row[0] || '').trim();
+                if (isNewRow) cell0 = cell0.replace(/new/i, '<span class="badge-new">Mới</span>');
+                bodyHtml += `<td>${cell0 === "" ? "" : iconPrefix + cell0}</td>`;
+
+                let cell1 = String(row[1] || '').trim();
+                if (rowUrl) {
+                    bodyHtml += `<td><a href="${rowUrl}" class="lesson-title-link">${cell1} <i class="fa-solid fa-arrow-right ms-1" style="font-size: 11px;"></i></a></td>`;
+                } else {
+                    bodyHtml += `<td>${cell1}</td>`;
+                }
+
+                let cell3 = String(row[3] || row[4] || '').trim();
+                let extractedUrl = checkAndExtractUrl(cell3);
+                if (extractedUrl) {
+                    let label = cell3.replace(extractedUrl, '').trim() || "Truy cập";
+                    bodyHtml += `<td><a href="${extractedUrl}" class="btn-portal-action"><i class="fa-solid fa-cloud-arrow-down"></i> ${label}</a></td>`;
+                } else {
+                    bodyHtml += `<td>${cell3}</td>`;
+                }
+
+                bodyHtml += '</tr>';
+            });
+
+            if (instructorInfos.length > 0) {
+                let cardContent = `<div class="instructor-card"><h6 class="mb-4"><i class="fa-solid fa-chalkboard-user me-2"></i>Thông tin lớp học & Giảng viên phụ trách</h6><div class="row">`;
+                instructorInfos.forEach(info => { cardContent += `<div class="col-12 col-md-6 instructor-item"><i class="fa-solid fa-check text-primary"></i> <span>${info}</span></div>`; });
+                cardContent += `</div></div>`;
+                $('#instructorArea').html(cardContent).removeClass('d-none');
+            }
+
+            $('#sheetTableHead').html(headHtml);
+            $('#sheetTableBody').html(bodyHtml);
+            $('#tableWrapper').removeClass('d-none');
+        }
         function loadWebLinks() {
             $.ajax({
                 url: SCRIPT_URL + "?action=getWebLinks",
