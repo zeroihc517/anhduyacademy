@@ -339,7 +339,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxP9oRQjhN9lT3eMxgSHM6QBw_C9M2ytWo8WbmKcFPDOgOTPC_flqg5dT0cjZtpJKjQow/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZrfbpywKKfgRqlUZntM5Gua87xmyWcdXtlVgWFpXQp4dYA2N8lmFG9NKCPwfSXRHH0w/exec'; 
 
         function postToGAS(payload, onSuccess, onError) {
             $.ajax({
@@ -392,7 +392,8 @@
             "Toán 12 Tổ hợp Xác suất", "Toán 12 THPTQG2026",
         ];
         
-        let courseDataCache = {}; // Nơi lưu trữ dữ liệu tải sẵn
+        let courseDataCache = {}; // Nơi lưu trữ dữ liệu
+        let isDataReady = false;  // Biến kiểm tra dữ liệu đã tải xong chưa
 
         $(document).ready(function() {
             loadTongHopView();
@@ -407,33 +408,29 @@
             });
             $('#dynamicCourseList').html(optionsHtml);
 
-            // Bắt đầu tải ngầm dữ liệu tuần tự để không làm quá tải Google Script
-            preloadCoursesBackground();
+            // Bắt đầu tải TOÀN BỘ dữ liệu 1 LẦN DUY NHẤT
+            fetchAllDataAtOnce();
         });
 
-        // Hàm tải ngầm dữ liệu
-        function preloadCoursesBackground() {
-            let queue = [...danhMucThuCong];
+      // Hàm tải gộp tất cả dữ liệu
+        function fetchAllDataAtOnce() {
+            // Thêm icon loading nhỏ báo cho user biết hệ thống đang đồng bộ
+            $('#dynamicCourseList').append('<div id="globalLoader" class="text-primary small px-2 mt-2 fw-bold"><i class="fa-solid fa-spinner fa-spin me-1"></i>Đang tải dữ liệu môn học...</div>');
             
-            function fetchNext() {
-                if (queue.length === 0) return; // Đã tải xong toàn bộ
-                
-                let sheetName = queue.shift();
-                $.ajax({
-                    url: SCRIPT_URL + "?action=getHocPhanData&sheetName=" + encodeURIComponent(sheetName),
-                    method: "GET",
-                    dataType: "json",
-                    success: function(data) {
-                        courseDataCache[sheetName] = data; // Lưu vào cache
-                        fetchNext(); // Tải tiếp môn học tiếp theo
-                    },
-                    error: function() {
-                        fetchNext(); // Nếu lỗi môn này, bỏ qua tải môn tiếp theo
-                    }
-                });
-            }
-            
-            fetchNext(); // Kích hoạt chạy ngầm
+            $.ajax({
+                url: SCRIPT_URL + "?action=getAllHocPhanData",
+                method: "GET",
+                dataType: "json",
+                success: function(data) {
+                    courseDataCache = data; // Lưu TOÀN BỘ vào bộ nhớ
+                    isDataReady = true;
+                    // Báo hiệu xong và ẩn đi
+                    $('#globalLoader').html('<i class="fa-solid fa-check text-success me-1"></i>Đã sẵn sàng!').fadeOut(3000);
+                },
+                error: function() {
+                    $('#globalLoader').html('<span class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi đồng bộ! Vui lòng F5 lại trang.</span>');
+                }
+            });
         }
 
       
@@ -485,30 +482,29 @@ function loadDataByHocPhan(sheetName, element) {
                 overlay.classList.remove('show');
             }
 
-            // KIỂM TRA BỘ NHỚ ĐỆM (CACHE)
-            if (courseDataCache[sheetName]) {
-                // Nếu đã tải ngầm xong -> Hiển thị NGAY LẬP TỨC
+            // KIỂM TRA BỘ NHỚ
+            if (isDataReady && courseDataCache[sheetName]) {
+                // Nếu đã tải cục dữ liệu xong -> BẤM LÀ HIỆN LIỀN 100%
                 $('#loadingStatus').addClass('d-none');
                 renderCourseData(courseDataCache[sheetName]);
-            } else {
-                // Nếu người dùng bấm quá nhanh lúc chưa tải ngầm xong -> Mới gọi AJAX
-                $('#loadingStatus').removeClass('d-none');
-                $.ajax({
-                    url: SCRIPT_URL + "?action=getHocPhanData&sheetName=" + encodeURIComponent(sheetName),
-                    method: "GET",
-                    dataType: "json",
-                    success: function(data) {
-                        courseDataCache[sheetName] = data; // Lưu lại vào cache
+            } else if (!isDataReady) {
+                // Trường hợp user mở web lên và bấm siêu nhanh (chưa tới 1 giây) khi dữ liệu tổng chưa kịp tải về
+                $('#loadingStatus').removeClass('d-none').html('<div class="spinner-modern"></div><span class="text-muted fw-bold">Hệ thống đang chuẩn bị dữ liệu, vui lòng đợi vài giây...</span>');
+                
+                // Chờ và kiểm tra liên tục mỗi 0.5s cho đến khi dữ liệu tổng tải xong
+                let checkReady = setInterval(() => {
+                    if (isDataReady) {
+                        clearInterval(checkReady);
                         $('#loadingStatus').addClass('d-none');
-                        renderCourseData(data);
-                    },
-                    error: function() {
-                        $('#loadingStatus').html('<span class="text-danger fw-bold">Có lỗi xảy ra khi tải dữ liệu!</span>');
+                        renderCourseData(courseDataCache[sheetName] || []);
                     }
-                });
+                }, 500);
+            } else {
+                 // Nếu không có tên sheet trong danh sách
+                $('#loadingStatus').addClass('d-none');
+                renderCourseData([]); 
             }
         }
-
         // Hàm tách biệt đảm nhiệm việc vẽ bảng giao diện
         function renderCourseData(data) {
             if (!data || data.length === 0) {
